@@ -1723,9 +1723,9 @@ struct ColorCubeScene {
 	std::clock_t start;
 	float duration;
 	vector<vector<float>> velocity;
-	vector<float> rotata;
-	vector<float> rotatas;
-	vector<vec3> rotata_ang;
+	vector<float> cur_rotate_val;
+	vector<float> rotate_incre_val;
+	vector<vec3> rotate_axis;
 	int count_o2 = 0;
 	Shader sd;
 	vector<mat4> los_pos;
@@ -1776,9 +1776,9 @@ public:
 
 
 			float r = 0.01f + (rand()) / (float)(RAND_MAX / (0.02f - 0.01f));
-			rotata.push_back(r);
-			rotatas.push_back(r);
-			rotata_ang.push_back(vec3((rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX)));
+			cur_rotate_val.push_back(r);
+			rotate_incre_val.push_back(r);
+			rotate_axis.push_back(vec3((rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX)));
 		}
 
 		
@@ -1807,7 +1807,7 @@ public:
 			glClearColor(0.0f, 0.73f, 1.0f, 0.0f);
 		}
 
-		if (co2_arr.size() - o2_arr.size() >= 10)
+		if (co2_arr.size() - o2_arr.size() >= 100)
 		{
 			lost = true;
 			//glClearColor(0.3f, 0.0f, 0.0f, 0.0f);
@@ -1821,8 +1821,9 @@ public:
 		mod = glm::translate(mod, glm::vec3(0.0f, -0.8f, -2.0f));
 		mod = glm::scale(mod, glm::vec3(0.05f, 0.05f, 0.05f));
 		glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
-		glUniformMatrix4fv(glGetUniformLocation(sd.Program, "viewPos"), 1, GL_FALSE, glm::value_ptr(modelview));
 
+		/* get the light */
+		glUniformMatrix4fv(glGetUniformLocation(sd.Program, "viewPos"), 1, GL_FALSE, glm::value_ptr(modelview));
 		GLint lightAmbientLoc = glGetUniformLocation(sd.Program, "light.ambient");
 		GLint lightDiffuseLoc = glGetUniformLocation(sd.Program, "light.diffuse");
 		GLint lightSpecularLoc = glGetUniformLocation(sd.Program, "light.specular");
@@ -1834,6 +1835,7 @@ public:
 
 		duration = (std::clock() - start) / (float)CLOCKS_PER_SEC;
 
+		/* checking whether need to spawn a co2 */
 		if (duration > 1.5f && !win && !lost)
 		{
 			co2_arr.push_back("co2");
@@ -1858,9 +1860,9 @@ public:
 			velocity.push_back(tmp);
 
 			float r = 0.01f + (rand()) / (float)(RAND_MAX / (0.02f - 0.01f));
-			rotata.push_back(r);
-			rotatas.push_back(r);
-			rotata_ang.push_back(vec3((rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX)));
+			cur_rotate_val.push_back(r);
+			rotate_incre_val.push_back(r);
+			rotate_axis.push_back(vec3((rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX)));
 			co2_pos.push_back(glm::scale(mod, glm::vec3(20.0f, 20.0f, 20.0f)));
 			start = clock();
 		}
@@ -1869,7 +1871,7 @@ public:
 
 		if (lost)
 		{
-			glm::mat4 mod = mat4();
+			mod = mat4();
 			for (int i = 0; i < los_pos.size(); i++)
 			{
 				mod = los_pos[i];
@@ -1884,71 +1886,62 @@ public:
 			{
 				if (win)
 				{
-					glm::mat4 mod = co2_pos[i];
+					mod = co2_pos[i];
 					glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
 					o2_tmp.Draw(sd);
 				}
 				else
 				{
-					glm::mat4 mod = mat4();
-
+					mod = mat4();
+					/* transformation for this molecule with scale rotate and translate */
 					mod = glm::translate(mod, glm::vec3(velocity[i][0], velocity[i][1], velocity[i][2]));
 					mod = glm::translate(mod, vec3(co2_pos[i][3][0], co2_pos[i][3][1], co2_pos[i][3][2]));
-					mod = glm::rotate(mod, (float)rotata[i], rotata_ang[i]);
+					mod = glm::rotate(mod, (float)cur_rotate_val[i], rotate_axis[i]);
 					mod = glm::scale(mod, glm::vec3(0.05f, 0.05f, 0.05f));
 
 					co2_pos[i] = mod;
 
-					if (mod[3][0] >= 1.0f || mod[3][0] <= -1.0f)
-					{
-						velocity[i][0] *= -1.0f;
-					}
+					/* checking whether the molecule is outside the bounding box */
+					(mod[3][0] >= 1.0f || mod[3][0] <= -1.0f) ? velocity[i][0] *= -1.0f : velocity[i][0];
+					(mod[3][1] >= 0.3f || mod[3][1] <= -1.2f) ? velocity[i][1] *= -1.0f : velocity[i][1];
+					(mod[3][2] >= -0.8f || mod[3][2] <= -3.0f) ? velocity[i][2] *= -1.0f : velocity[i][2];
 
-					if (mod[3][1] >= 0.3f || mod[3][1] <= -1.2f)
-					{
-						velocity[i][1] *= -1.0f;
-					}
+					cur_rotate_val[i] += rotate_incre_val[i];
 
-					if (mod[3][2] >= -0.8f || mod[3][2] <= -3.0f)
-					{
-						velocity[i][2] *= -1.0f;
-					}
-
-					rotata[i] += rotatas[i];
-
-					glm::quat qut_L = quat(left_line_pos.second.w, left_line_pos.second.x, left_line_pos.second.y, left_line_pos.second.z);
-					vec3 dir_vect = qut_L * vec3(0.0f, 0.0f, -1.0f);
-					vec3 endPoint = dir_vect * 100000.0f;
-					vec3 nextDist = (endPoint - left_line_pos.first);
-					vec3 tmp = glm::cross(nextDist, (left_line_pos.first - vec3(mod[3])));
-					float tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
-					float dist_L = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
-
-					glm::quat qut_R = quat(right_line_pos.second.w, right_line_pos.second.x, right_line_pos.second.y, right_line_pos.second.z);
-					dir_vect = qut_R * vec3(0.0f, 0.0f, -1.0f);
-					endPoint = dir_vect * 100000.0f;
-					nextDist = (endPoint - right_line_pos.first);
-					tmp = glm::cross(nextDist, (right_line_pos.first - vec3(mod[3])));
-					tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
-					float dist_R = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
-
-					if (check_type( co2_arr[i]) && dist_R <= 0.06f && dist_L <= 0.06f && left_trig && right_trig)
-					{
-						ovr_SetControllerVibration(tempOvrSession, ovrControllerType_LTouch, 1.0f, 255);
-						ovr_SetControllerVibration(tempOvrSession, ovrControllerType_RTouch, 1.0f, 255);
-						co2_arr[i] = "o2";
-						o2_arr.push_back("o2");
-					}
-
-					glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
+					/* calculating the two hand intersection with the co2 obj */
 					if (check_type(co2_arr[i]))
 					{
-						co2_tmp.Draw(sd);
+						// left hand
+						glm::quat qut_L = quat(left_line_pos.second.w, left_line_pos.second.x, left_line_pos.second.y, left_line_pos.second.z);
+						vec3 dir_vect = qut_L * vec3(0.0f, 0.0f, -1.0f);
+						vec3 endPoint = dir_vect * 100000.0f;
+						vec3 nextDist = (endPoint - left_line_pos.first);
+						vec3 tmp = glm::cross(nextDist, (left_line_pos.first - vec3(mod[3])));
+						float tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
+						float dist_L = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
+
+						// right hand
+						glm::quat qut_R = quat(right_line_pos.second.w, right_line_pos.second.x, right_line_pos.second.y, right_line_pos.second.z);
+						dir_vect = qut_R * vec3(0.0f, 0.0f, -1.0f);
+						endPoint = dir_vect * 100000.0f;
+						nextDist = (endPoint - right_line_pos.first);
+						tmp = glm::cross(nextDist, (right_line_pos.first - vec3(mod[3])));
+						tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
+						float dist_R = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
+						
+						// both intersected
+						if (dist_R <= 0.06f && dist_L <= 0.06f && left_trig && right_trig)
+						{
+							ovr_SetControllerVibration(tempOvrSession, ovrControllerType_LTouch, 1.0f, 255);
+							ovr_SetControllerVibration(tempOvrSession, ovrControllerType_RTouch, 1.0f, 255);
+							co2_arr[i] = "o2";
+							o2_arr.push_back("o2");
+						}
 					}
-					else
-					{
-						o2_tmp.Draw(sd);
-					}
+					
+					glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
+
+					(check_type(co2_arr[i])) ? co2_tmp.Draw(sd) : o2_tmp.Draw(sd);
 					
 				}
 			}
