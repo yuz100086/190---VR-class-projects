@@ -60,48 +60,13 @@ using glm::vec3;
 using glm::vec4;
 using glm::quat;
 
-mat3 rotate(const float degrees, const vec3& axis)
-{
-	glm::normalize(axis);
-	float angle = glm::radians(degrees);
-	return (float)cos(angle)*mat3(1, 0, 0, 0, 1, 0, 0, 0, 1) +
-		(float)(1 - cos(angle))*mat3(
-			axis.x*axis.x, axis.x*axis.y, axis.x*axis.z,
-			axis.x*axis.y, axis.y*axis.y, axis.y*axis.z,
-			axis.x*axis.z, axis.y*axis.z, axis.z*axis.z) +
-			(float)sin(angle)*mat3(
-				0, axis.z, -axis.y,
-				-axis.z, 0, axis.x,
-				axis.y, -axis.x, 0);
-}
-
-mat4 scale(const float &sx, const float &sy, const float &sz)
-{
-	mat4 ret(
-		sx, 0.0, 0.0, 0.0,
-		0.0, sy, 0.0, 0.0,
-		0.0, 0.0, sz, 0.0,
-		0.0, 0.0, 0.0, 1.0);
-
-	return ret;
-}
-
-mat4 translate(const float &tx, const float &ty, const float &tz)
-{
-	mat4 ret(
-		1.0, 0.0, 0.0, 0.0,
-		0.0, 1.0, 0.0, 0.0,
-		0.0, 0.0, 1.0, 0.0,
-		tx, ty, tz, 1.0);
-	return ret;
-}
-
-
 bool left_trig = false;
 bool right_trig = false;
 bool win = false;
 bool lost = false;
 bool reset_flag = false;
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // GLEW gives cross platform access to OpenGL 3.x+ functionality.  
@@ -1752,14 +1717,14 @@ struct ColorCubeScene {
 	Model fac1;
 	Model co2_tmp;
 	Model o2_tmp;
-	vector<Model> co2_arr;
+	vector<string> co2_arr;
+	std::vector<string> o2_arr;
 	std::vector<mat4> co2_pos;
-	std::vector<Model> o2_arr;
 	std::clock_t start;
-	double duration;
-	vector<vector<double>> velocity;
-	vector<double> rotata;
-	vector<double> rotatas;
+	float duration;
+	vector<vector<float>> velocity;
+	vector<float> rotata;
+	vector<float> rotatas;
 	vector<vec3> rotata_ang;
 	int count_o2 = 0;
 	Shader sd;
@@ -1770,6 +1735,11 @@ struct ColorCubeScene {
 	const unsigned int GRID_SIZE{ 5 };
 
 public:
+
+	inline bool check_type(string & str1) {
+		return str1 == "co2";
+	}
+
 	ColorCubeScene(){
 		sd = Shader("./shader.vert", "./shader.frag");
 		fac1 = Model("C:\\Users\\zyc19\\Downloads\\RobinCS190-all\\RobinCS190\\RobinCS190\\MinimalVR-master\\Minimal\\factory1.obj", "CO2");
@@ -1778,16 +1748,16 @@ public:
 
 		for (int i = 0; i < 5; i++)
 		{
-			co2_arr.push_back(co2_tmp);
+			co2_arr.push_back("co2");
 			float xpos = -0.7f + (rand()) / (float)(RAND_MAX / 1.4f);
 			float ypos = -1.0f + (rand()) / (float)(RAND_MAX);
 			float zpos = -2.4f + (rand()) / (float)(RAND_MAX / 2.0f);
 			vec3 relativePosition = vec3(xpos, ypos, zpos);
 
 			co2_pos.push_back(glm::translate(glm::mat4(1.0f), relativePosition));
-			double v1 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			double v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			double v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
+			float v1 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
+			float v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
+			float v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
 
 			if (rand() / (float)(RAND_MAX) > 0.5f)
 			{
@@ -1801,11 +1771,11 @@ public:
 			{
 				v3 *= -1.0f;
 			}
-			vector<double> tmp = { v1,v2,v3 };
+			vector<float> tmp = { v1,v2,v3 };
 			velocity.push_back(tmp);
 
 
-			double r = 0.01f + (rand()) / (float)(RAND_MAX / (0.02f - 0.01f));
+			float r = 0.01f + (rand()) / (float)(RAND_MAX / (0.02f - 0.01f));
 			rotata.push_back(r);
 			rotatas.push_back(r);
 			rotata_ang.push_back(vec3((rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX)));
@@ -1862,15 +1832,16 @@ public:
 		glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
 		glUniform3f(lightPos, 1.0f, 1.0f, 1.0f);
 
-		duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+		duration = (std::clock() - start) / (float)CLOCKS_PER_SEC;
 
 		if (duration > 1.5f && !win && !lost)
 		{
-			co2_arr.push_back(co2_tmp);
+			co2_arr.push_back("co2");
 			duration = 0;
-			double v1 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			double v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			double v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
+			float v1 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
+			float v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
+			float v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
+
 			if (rand() / (float)(RAND_MAX) > 0.5f)
 			{
 				v1 *= -1.0f;
@@ -1883,10 +1854,10 @@ public:
 			{
 				v3 *= -1.0f;
 			}
-			vector<double> tmp = { v1,v2,v3 };
+			vector<float> tmp = { v1,v2,v3 };
 			velocity.push_back(tmp);
 
-			double r = 0.01f + (rand()) / (float)(RAND_MAX / (0.02f - 0.01f));
+			float r = 0.01f + (rand()) / (float)(RAND_MAX / (0.02f - 0.01f));
 			rotata.push_back(r);
 			rotatas.push_back(r);
 			rotata_ang.push_back(vec3((rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX)));
@@ -1915,7 +1886,7 @@ public:
 				{
 					glm::mat4 mod = co2_pos[i];
 					glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
-					co2_arr[i].Draw(sd);
+					o2_tmp.Draw(sd);
 				}
 				else
 				{
@@ -1950,8 +1921,8 @@ public:
 					vec3 endPoint = dir_vect * 100000.0f;
 					vec3 nextDist = (endPoint - left_line_pos.first);
 					vec3 tmp = glm::cross(nextDist, (left_line_pos.first - vec3(mod[3])));
-					double tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
-					double dist_L = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
+					float tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
+					float dist_L = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
 
 					glm::quat qut_R = quat(right_line_pos.second.w, right_line_pos.second.x, right_line_pos.second.y, right_line_pos.second.z);
 					dir_vect = qut_R * vec3(0.0f, 0.0f, -1.0f);
@@ -1959,18 +1930,26 @@ public:
 					nextDist = (endPoint - right_line_pos.first);
 					tmp = glm::cross(nextDist, (right_line_pos.first - vec3(mod[3])));
 					tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
-					double dist_R = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
+					float dist_R = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
 
-					if (!co2_arr[i].is_O2() && dist_R <= 0.06f && dist_L <= 0.06f && left_trig && right_trig)
+					if (check_type( co2_arr[i]) && dist_R <= 0.06f && dist_L <= 0.06f && left_trig && right_trig)
 					{
 						ovr_SetControllerVibration(tempOvrSession, ovrControllerType_LTouch, 1.0f, 255);
 						ovr_SetControllerVibration(tempOvrSession, ovrControllerType_RTouch, 1.0f, 255);
-						co2_arr[i] = o2_tmp;
-						o2_arr.push_back(o2_tmp);
+						co2_arr[i] = "o2";
+						o2_arr.push_back("o2");
 					}
 
 					glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
-					co2_arr[i].Draw(sd);
+					if (check_type(co2_arr[i]))
+					{
+						co2_tmp.Draw(sd);
+					}
+					else
+					{
+						o2_tmp.Draw(sd);
+					}
+					
 				}
 			}
 		}
