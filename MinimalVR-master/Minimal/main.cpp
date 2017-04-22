@@ -1742,9 +1742,9 @@ public:
 
 	ColorCubeScene(){
 		sd = Shader("./shader.vert", "./shader.frag");
-		fac1 = Model("C:\\Users\\zyc19\\Downloads\\RobinCS190-all\\RobinCS190\\RobinCS190\\MinimalVR-master\\Minimal\\factory1.obj", "CO2");
-		co2_tmp = Model("C:\\Users\\zyc19\\Downloads\\RobinCS190-all\\RobinCS190\\RobinCS190\\MinimalVR-master\\Minimal\\co2.obj", "CO2");
-		o2_tmp = Model("C:\\Users\\zyc19\\Downloads\\RobinCS190-all\\RobinCS190\\RobinCS190\\MinimalVR-master\\Minimal\\o2.obj", "O2");
+		fac1 = Model("./factory1.obj", "CO2");
+		co2_tmp = Model("./co2.obj", "CO2");
+		o2_tmp = Model("./o2.obj", "O2");
 
 		for (int i = 0; i < 5; i++)
 		{
@@ -1759,18 +1759,10 @@ public:
 			float v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
 			float v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
 
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v1 *= -1.0f;
-			}
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v2 *= -1.0f;
-			}
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v3 *= -1.0f;
-			}
+			(rand() / (float)(RAND_MAX) > 0.5f) ? v1 *= -1.0f : v1;
+			(rand() / (float)(RAND_MAX) > 0.5f) ? v2 *= -1.0f : v2;
+			(rand() / (float)(RAND_MAX) > 0.5f) ? v3 *= -1.0f : v3;
+
 			vector<float> tmp = { v1,v2,v3 };
 			velocity.push_back(tmp);
 
@@ -1807,10 +1799,9 @@ public:
 			glClearColor(0.0f, 0.73f, 1.0f, 0.0f);
 		}
 
-		if (co2_arr.size() - o2_arr.size() >= 100)
+		if (co2_arr.size() - o2_arr.size() >= 10)
 		{
 			lost = true;
-			//glClearColor(0.3f, 0.0f, 0.0f, 0.0f);
 		}
 
 		sd.Use();
@@ -1844,18 +1835,10 @@ public:
 			float v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
 			float v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
 
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v1 *= -1.0f;
-			}
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v2 *= -1.0f;
-			}
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v3 *= -1.0f;
-			}
+			(rand() / (float)(RAND_MAX) > 0.5f) ? v1 *= -1.0f : v1;
+			(rand() / (float)(RAND_MAX) > 0.5f) ? v2 *= -1.0f : v2;
+			(rand() / (float)(RAND_MAX) > 0.5f) ? v3 *= -1.0f : v3;
+
 			vector<float> tmp = { v1,v2,v3 };
 			velocity.push_back(tmp);
 
