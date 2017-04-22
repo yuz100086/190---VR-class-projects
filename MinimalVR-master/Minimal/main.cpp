@@ -957,12 +957,6 @@ static void _renderPose(const glm::mat4& worldViewProj, const ovrAvatarSkinnedMe
 	else {
 		_renderDebugLine(worldViewProj, glm::vec3(0, 0, 0), glm::vec3(0, 0, -200), laserColorRight, glm::vec4(1, 1, 1, 1));
 	}
-	
-	/*for (uint32_t i = 1; i < pose.jointCount; ++i)
-	{
-		int parent = pose.jointParents[i];
-		_renderDebugLine(worldViewProj, glm::vec3(skinnedPoses[parent][3]), glm::vec3(skinnedPoses[i][3]), glm::vec4(1, 1, 1, 1), glm::vec4(1, 0, 0, 1));
-	}*/
 }
 
 static void _renderSkinnedMeshPart(const ovrAvatarRenderPart_SkinnedMeshRender* mesh, uint32_t visibilityMask, const glm::mat4& world, const glm::mat4& view, const glm::mat4 proj, const glm::vec3& viewPos, bool isRight)
@@ -991,25 +985,14 @@ static void _renderSkinnedMeshPart(const ovrAvatarRenderPart_SkinnedMeshRender* 
 	// Write to depth first for self-occlusion
 	if (mesh->visibilityMask & ovrAvatarVisibilityFlag_SelfOccluding)
 	{
-		//glDepthMask(GL_TRUE);
-		//glColorMaski(0, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		glDrawElements(GL_TRIANGLES, (GLsizei)data->elementCount, GL_UNSIGNED_SHORT, 0);
-		//glDepthFunc(GL_EQUAL);
 	}
 
 	// Render to color buffer
-	//glDepthMask(GL_FALSE);
 	glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glDrawElements(GL_TRIANGLES, (GLsizei)data->elementCount, GL_UNSIGNED_SHORT, 0);
 	glBindVertexArray(0);
 
-	/*if (renderJoints)
-	{
-		glm::mat4 local;
-		_glmFromOvrAvatarTransform(mesh->localTransform, &local);
-		glDepthFunc(GL_ALWAYS);
-		_renderPose(proj * view * world * local, mesh->skinnedPose);
-	}*/
 	glm::mat4 local;
 	_glmFromOvrAvatarTransform(mesh->localTransform, &local);
 	glDepthFunc(GL_ALWAYS);
@@ -1055,13 +1038,6 @@ static void _renderSkinnedMeshPartPBS(const ovrAvatarRenderPart_SkinnedMeshRende
 	glDrawElements(GL_TRIANGLES, (GLsizei)data->elementCount, GL_UNSIGNED_SHORT, 0);
 	glBindVertexArray(0);
 
-	/*if (renderJoints)
-	{
-		glm::mat4 local;
-		_glmFromOvrAvatarTransform(mesh->localTransform, &local);
-		glDepthFunc(GL_ALWAYS);
-		_renderPose(proj * view * world * local, mesh->skinnedPose);
-	}*/
 	glm::mat4 local;
 	_glmFromOvrAvatarTransform(mesh->localTransform, &local);
 	glDepthFunc(GL_ALWAYS);
@@ -1605,12 +1581,7 @@ protected:
 				}
 			}
 
-
-			/*printf("\rleft_pos: %.6f, %.6f, %.6f     left_ori: %.6f, %.6f, %.6f, %.6f", inputStateLeft.transform.position.x, inputStateLeft.transform.position.y, inputStateLeft.transform.position.z,
-				inputStateLeft.transform.orientation.x, inputStateLeft.transform.orientation.y, inputStateLeft.transform.orientation.z, inputStateLeft.transform.orientation.w);*/
-
 			if (inputStateLeft.indexTrigger > 0.5) {
-				//ovr_SetControllerVibration(_session, ovrControllerType_LTouch, inputStateLeft.indexTrigger * 0.3f, amplitudeL);
 				laserColorLeft = glm::vec4(1, 0, 0, 1);
 				left_trig = true;
 			}
@@ -1620,7 +1591,6 @@ protected:
 				left_trig = false;
 			}
 			if (inputStateRight.indexTrigger > 0.5) {
-				//ovr_SetControllerVibration(_session, ovrControllerType_RTouch, inputStateRight.indexTrigger * 0.3f, amplitudeR);
 				laserColorRight = glm::vec4(1, 0, 0, 1);
 				right_trig = true;
 			}
@@ -1792,7 +1762,7 @@ struct ColorCubeScene {
 	vector<double> rotatas;
 	vector<vec3> rotata_ang;
 	int count_o2 = 0;
-
+	Shader sd;
 	vector<mat4> los_pos;
 
 	// VBOs for the cube's vertices and normals
@@ -1801,7 +1771,7 @@ struct ColorCubeScene {
 
 public:
 	ColorCubeScene(){
-
+		sd = Shader("./shader.vert", "./shader.frag");
 		fac1 = Model("C:\\Users\\zyc19\\Downloads\\RobinCS190-all\\RobinCS190\\RobinCS190\\MinimalVR-master\\Minimal\\factory1.obj", "CO2");
 		co2_tmp = Model("C:\\Users\\zyc19\\Downloads\\RobinCS190-all\\RobinCS190\\RobinCS190\\MinimalVR-master\\Minimal\\co2.obj", "CO2");
 		o2_tmp = Model("C:\\Users\\zyc19\\Downloads\\RobinCS190-all\\RobinCS190\\RobinCS190\\MinimalVR-master\\Minimal\\o2.obj", "O2");
@@ -1815,10 +1785,6 @@ public:
 			vec3 relativePosition = vec3(xpos, ypos, zpos);
 
 			co2_pos.push_back(glm::translate(glm::mat4(1.0f), relativePosition));
-			/*if (relativePosition == vec3(0)) {
-				continue;
-			}*/
-			
 			double v1 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
 			double v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
 			double v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
@@ -1863,7 +1829,7 @@ public:
 	}
 
 	void render(const mat4 & projection, const mat4 & modelview) {
-		Shader sd("./shader.vert", "./shader.frag");
+		
 
 		if (o2_arr.size() == co2_arr.size())
 		{
@@ -1932,9 +1898,6 @@ public:
 
 		if (lost)
 		{
-			glUniformMatrix4fv(glGetUniformLocation(sd.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-			glUniformMatrix4fv(glGetUniformLocation(sd.Program, "view"), 1, GL_FALSE, glm::value_ptr(modelview));
-			glUniformMatrix4fv(glGetUniformLocation(sd.Program, "viewPos"), 1, GL_FALSE, glm::value_ptr(modelview));
 			glm::mat4 mod = mat4();
 			for (int i = 0; i < los_pos.size(); i++)
 			{
@@ -1948,15 +1911,8 @@ public:
 		{
 			for (int i = 0; i < co2_arr.size(); i++)
 			{
-				glUniformMatrix4fv(glGetUniformLocation(sd.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-				glUniformMatrix4fv(glGetUniformLocation(sd.Program, "view"), 1, GL_FALSE, glm::value_ptr(modelview));
-				glUniformMatrix4fv(glGetUniformLocation(sd.Program, "viewPos"), 1, GL_FALSE, glm::value_ptr(modelview));
-
 				if (win)
 				{
-					char buff[100];
-					sprintf_s(buff, "the %d object\n", i);
-					OutputDebugStringA(buff);
 					glm::mat4 mod = co2_pos[i];
 					glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
 					co2_arr[i].Draw(sd);
@@ -2011,9 +1967,6 @@ public:
 						ovr_SetControllerVibration(tempOvrSession, ovrControllerType_RTouch, 1.0f, 255);
 						co2_arr[i] = o2_tmp;
 						o2_arr.push_back(o2_tmp);
-						char buff[100];
-						sprintf_s(buff, "the %d object intersect\n", i);
-						OutputDebugStringA(buff);
 					}
 
 					glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
@@ -2021,9 +1974,6 @@ public:
 				}
 			}
 		}
-
-		
-
 	}
 };
 
@@ -2033,21 +1983,6 @@ class ExampleApp : public RiftApp {
 	std::shared_ptr<ColorCubeScene> cubeScene;
 
 public:
-	/*
-	Model fac1;
-	Model co2_tmp;
-	Model o2_tmp;
-	vector<Model> co2_arr;
-	std::vector<mat4> co2_pos;
-	std::vector<Model> o2_arr;
-	std::clock_t start;
-	double duration;
-	vector<vector<double>> velocity;
-	vector<double> rotata;
-	vector<double> rotatas;
-	vector<vec3> rotata_ang;
-	int count_o2 = 0;
-	*/
 	ExampleApp() {}
 protected:
 	void initGl() override {
@@ -2070,63 +2005,6 @@ protected:
 		// Recenter the tracking origin at startup so that the reflection avatar appears directly in front of the user
 		ovr_RecenterTrackingOrigin(_session);
 
-
-		/*
-		fac1 = Model("C:\\Users\\yuz287\\Downloads\\MinimalVR-master\\Minimal\\factory1.obj", "CO2");
-		co2_tmp = Model("C:\\Users\\yuz287\\Downloads\\MinimalVR-master\\Minimal\\co2.obj", "CO2");
-		o2_tmp = Model("C:\\Users\\yuz287\\Downloads\\MinimalVR-master\\Minimal\\o2.obj", "O2");
-		// Initialize the avatar module
-		ovrAvatar_Initialize(MIRROR_SAMPLE_APP_ID);
-
-		// Start retrieving the avatar specification
-		printf("Requesting avatar specification...\r\n");
-		ovrID userID = ovr_GetLoggedInUserID();
-		ovrAvatar_RequestAvatarSpecification(userID);
-
-		// Recenter the tracking origin at startup so that the reflection avatar appears directly in front of the user
-		ovr_RecenterTrackingOrigin(_session);
-
-		for (int i = 0; i < 5; i++)
-		{
-			co2_arr.push_back(co2_tmp);
-			float xpos = (rand()) / (float)(RAND_MAX) / 2.0f;
-			float ypos = (rand()) / (float)(RAND_MAX) / 1.4f;
-			float zpos = (rand()) / (float)(RAND_MAX) / 1.4f;
-			vec3 relativePosition = vec3(xpos, ypos, -zpos);
-			if (relativePosition == vec3(0)) {
-				continue;
-			}
-			co2_pos.push_back(glm::translate(glm::mat4(1.0f), relativePosition));
-
-
-			double v1 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			double v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			double v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v1 *= -1.0f;
-			}
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v2 *= -1.0f;
-			}
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v3 *= -1.0f;
-			}
-			vector<double> tmp = { v1,v2,v3 };
-			velocity.push_back(tmp);
-
-
-			double r = 0.01f + (rand()) / (float)(RAND_MAX / (0.02f - 0.01f));
-			rotata.push_back(r);
-			rotatas.push_back(r);
-			rotata_ang.push_back(vec3((rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX)));
-		}
-		start = clock();
-		*/
-
 		cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
 	}
 
@@ -2148,158 +2026,12 @@ protected:
 		}
 		cubeScene->render(projection, glm::inverse(headPose));
 
-		/*
-		Shader sd("./shader.vert", "./shader.frag");
-
-		if (o2_arr.size() == co2_arr.size())
-		{
-			win = true;
-			glClearColor(0.0f, 0.0f, 0.85f, 0.0f);
-		}
-
-		if (co2_arr.size() - o2_arr.size() >= 10)
-		{
-			lost = true;
-			glClearColor(0.3f, 0.0f, 0.0f, 0.0f);
-		}
-
-		sd.Use();
-
-		glUniformMatrix4fv(glGetUniformLocation(sd.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(sd.Program, "view"), 1, GL_FALSE, glm::value_ptr(glm::inverse(headPose)));
-		glm::mat4 mod;
-		mod = glm::translate(mod, glm::vec3(0.0f, -0.4f, -1.0f));
-		mod = glm::scale(mod, glm::vec3(0.05f, 0.05f, 0.05f));
-		glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
-		glUniformMatrix4fv(glGetUniformLocation(sd.Program, "viewPos"), 1, GL_FALSE, glm::value_ptr(glm::inverse(headPose)));
-
-		GLint lightAmbientLoc = glGetUniformLocation(sd.Program, "light.ambient");
-		GLint lightDiffuseLoc = glGetUniformLocation(sd.Program, "light.diffuse");
-		GLint lightSpecularLoc = glGetUniformLocation(sd.Program, "light.specular");
-		GLint lightPos = glGetUniformLocation(sd.Program, "light.position");
-		glUniform3f(lightAmbientLoc, 0.2f, 0.2f, 0.2f);
-		glUniform3f(lightDiffuseLoc, 1.0f, 1.0f, 1.0f); // Let's darken the light a bit to fit the scene
-		glUniform3f(lightSpecularLoc, 1.0f, 1.0f, 1.0f);
-		glUniform3f(lightPos, 1.0f, 1.0f, 1.0f);
-
-		duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-		if (duration > 3 && !win && !lost)
-		{
-			co2_arr.push_back(co2_tmp);
-			duration = 0;
-			double v1 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			double v2 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			double v3 = 0.0003f + (rand()) / (float)(RAND_MAX / (0.0008f - 0.0003f));
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v1 *= -1.0f;
-			}
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v2 *= -1.0f;
-			}
-			if (rand() / (float)(RAND_MAX) > 0.5f)
-			{
-				v3 *= -1.0f;
-			}
-			vector<double> tmp = { v1,v2,v3 };
-			velocity.push_back(tmp);
-
-			double r = 0.01f + (rand()) / (float)(RAND_MAX / (0.02f - 0.01f));
-			rotata.push_back(r);
-			rotatas.push_back(r);
-			rotata_ang.push_back(vec3((rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX), (rand()) / (float)(RAND_MAX)));
-			co2_pos.push_back(glm::scale(mod, glm::vec3(20.0f, 20.0f, 20.0f)));
-			start = clock();
-		}
-
-		fac1.Draw(sd);
-
-		for (int i = 0; i < co2_arr.size(); i++)
-		{
-			glUniformMatrix4fv(glGetUniformLocation(sd.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-			glUniformMatrix4fv(glGetUniformLocation(sd.Program, "view"), 1, GL_FALSE, glm::value_ptr(glm::inverse(headPose)));
-			glUniformMatrix4fv(glGetUniformLocation(sd.Program, "viewPos"), 1, GL_FALSE, glm::value_ptr(glm::inverse(headPose)));
-
-			if (win || lost)
-			{
-				char buff[100];
-				sprintf_s(buff, "the %d object\n", i);
-				OutputDebugStringA(buff);
-				glm::mat4 mod = co2_pos[i];
-				glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
-				co2_arr[i].Draw(sd);
-			}
-			else
-			{
-				glm::mat4 mod = mat4();
-
-				mod = glm::translate(mod, glm::vec3(velocity[i][0], velocity[i][1], velocity[i][2]));
-				mod = glm::translate(mod, vec3(co2_pos[i][3][0], co2_pos[i][3][1], co2_pos[i][3][2]));
-				mod = glm::rotate(mod, (float)rotata[i], rotata_ang[i]);
-				mod = glm::scale(mod, glm::vec3(0.05f, 0.05f, 0.05f));
-
-				co2_pos[i] = mod;
-
-				if (mod[3][0] >= 0.8f || mod[3][0] <= -0.5f)
-				{
-					velocity[i][0] *= -1.0f;
-				}
-
-				if (mod[3][1] >= 0.5f || mod[3][1] <= -0.6f)
-				{
-					velocity[i][1] *= -1.0f;
-				}
-
-				if (mod[3][2] >= 0.5f || mod[3][2] <= -1.3f)
-				{
-					velocity[i][2] *= -1.0f;
-				}
-
-				rotata[i] += rotatas[i];
-
-				glm::quat qut_L = quat(left_line_pos.second.w, left_line_pos.second.x, left_line_pos.second.y, left_line_pos.second.z);
-				vec3 dir_vect = qut_L * vec3(0.0f, 0.0f, -1.0f);
-				vec3 endPoint = dir_vect * 10000.0f;
-				vec3 nextDist = (endPoint - left_line_pos.first);
-				vec3 tmp = glm::cross(nextDist, (left_line_pos.first - vec3(mod[3])));
-				double tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
-				double dist_L = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
-
-				glm::quat qut_R = quat(right_line_pos.second.w, right_line_pos.second.x, right_line_pos.second.y, right_line_pos.second.z);
-				dir_vect = qut_R * vec3(0.0f, 0.0f, -1.0f);
-				endPoint = dir_vect * 10000.0f;
-				nextDist = (endPoint - left_line_pos.first);
-				tmp = glm::cross(nextDist, (left_line_pos.first - vec3(mod[3])));
-				tmp2 = sqrt(pow(nextDist.x, 2) + pow(nextDist.y, 2) + pow(nextDist.z, 2));
-				double dist_R = sqrt(pow(tmp.x, 2) + pow(tmp.y, 2) + pow(tmp.z, 2)) / tmp2;
-
-				if (!co2_arr[i].is_O2() &&dist_R <= 0.08f && dist_L <= 0.08f && left_trig && right_trig)
-				{
-					co2_arr[i] = o2_tmp;
-					o2_arr.push_back(o2_tmp);
-					char buff[100];
-					sprintf_s(buff, "the %d object intersect\n", i);
-					OutputDebugStringA(buff);
-				}
-
-				glUniformMatrix4fv(glGetUniformLocation(sd.Program, "model"), 1, GL_FALSE, glm::value_ptr(mod));
-				co2_arr[i].Draw(sd);
-			}
-		}
-
-		*/
 	}
 };
 
 // Execute our example class
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	int result = -1;
-	AllocConsole();
-	freopen("conin$", "r", stdin);
-	freopen("conout$", "w", stdout);
-	freopen("conout$", "w", stderr);
 	try {
 		// Initialization call
 		if (ovr_PlatformInitializeWindows(MIRROR_SAMPLE_APP_ID) != ovrPlatformInitialize_Success)
