@@ -22,7 +22,7 @@ limitations under the License.
 #include <memory>
 #include <exception>
 #include <algorithm>
-
+#include "shader.h"
 #include <Windows.h>
 
 #define __STDC_FORMAT_MACROS 1
@@ -583,6 +583,68 @@ protected:
 //
 
 
+//! Load a ppm file from disk.
+// @input filename The location of the PPM file.  If the file is not found, an error message
+//		will be printed and this function will return 0
+// @input width This will be modified to contain the width of the loaded image, or 0 if file not found
+// @input height This will be modified to contain the height of the loaded image, or 0 if file not found
+//
+// @return Returns the RGB pixel data as interleaved unsigned chars (R0 G0 B0 R1 G1 B1 R2 G2 B2 .... etc) or 0 if an error ocured
+
+unsigned char* loadPPM(const char* filename, int& width, int& height)
+{
+	const int BUFSIZE = 128;
+	FILE* fp;
+	unsigned int read;
+	unsigned char* rawData;
+	char buf[3][BUFSIZE];
+	char* retval_fgets;
+	size_t retval_sscanf;
+
+	if ((fp = fopen(filename, "rb")) == NULL)
+	{
+		std::cerr << "error reading ppm file, could not locate " << filename << std::endl;
+		width = 0;
+		height = 0;
+		return 0;
+	}
+
+	// Read magic number:
+	retval_fgets = fgets(buf[0], BUFSIZE, fp);
+
+	// Read width and height:
+	do
+	{
+		retval_fgets = fgets(buf[0], BUFSIZE, fp);
+	} while (buf[0][0] == '#');
+	retval_sscanf = sscanf(buf[0], "%s %s", buf[1], buf[2]);
+	width = atoi(buf[1]);
+	height = atoi(buf[2]);
+
+	// Read maxval:
+	do
+	{
+		retval_fgets = fgets(buf[0], BUFSIZE, fp);
+	} while (buf[0][0] == '#');
+
+	// Read image data:
+	rawData = new unsigned char[width * height * 3];
+	read = fread(rawData, width * height * 3, 1, fp);
+	fclose(fp);
+	if (read != 1)
+	{
+		std::cerr << "error parsing ppm file, incomplete data" << std::endl;
+		delete[] rawData;
+		width = 0;
+		height = 0;
+
+		return 0;
+	}
+
+	return rawData;
+}
+
+
 //////////////////////////////////////////////////////////////////////
 //
 // OGLplus is a set of wrapper classes for giving OpenGL a more object
@@ -641,6 +703,7 @@ void main(void) {
 }
 )SHADER";
 
+
 static const char * FRAGMENT_SHADER = R"SHADER(
 //#version 410 core
 //
@@ -656,6 +719,7 @@ static const char * FRAGMENT_SHADER = R"SHADER(
 //}
 )SHADER";
 
+
 // a class for encapsulating building and rendering an RGB cube
 struct ColorCubeScene {
 
@@ -665,7 +729,10 @@ struct ColorCubeScene {
 	oglplus::VertexArray vao;
 	GLuint instanceCount;
 	oglplus::Buffer instances;
-
+	unsigned char * _data;
+	int _width = 0;
+	int _height = 0;
+	MyShader sd;
 	// VBOs for the cube's vertices and normals
 
 	const unsigned int GRID_SIZE{ 1 };
@@ -693,7 +760,7 @@ public:
 
 		// link and use it
 		prog.Use();
-
+		sd = MyShader("./shader.vert", "./shader.frag");
 		vao = cube.VAOForProgram(prog);
 		vao.Bind();
 		// Create a cube of cubes
@@ -734,6 +801,23 @@ public:
 		Uniform<mat4>(prog, "model").Set(model);
 		vao.Bind();
 		cube.Draw(instanceCount);
+		
+		_data = loadPPM(".\vr_test_pattern.ppm", _width, _height);
+		GLuint texture_ID;
+		glGenTextures(1, &texture_ID);
+		glBindTexture(GL_TEXTURE_2D, texture_ID);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB,
+			GL_UNSIGNED_BYTE, _data);
+		// Setup filtering (explained on slide 13)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		// Get a handle for our "myTextureSampler" uniform, and an ID for uv coordinates.
+		GLuint textureSpl_handle = glGetUniformLocation(sd.Program, "myTextureSampler");
+		GLuint uv_ID;
+		glGenBuffers(1, &uv_ID);
+		glBindBuffer(GL_ARRAY_BUFFER, uv_ID);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(UV), uvs, GL_STATIC_DRAW);
+
 	}
 };
 
