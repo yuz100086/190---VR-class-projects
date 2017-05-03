@@ -79,7 +79,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>LibOVR.lib;opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LibOVR.lib;opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -90,9 +90,12 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)\Include\LibOVR;$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>LibOVR.lib;opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LibOVR.lib;opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;SDL2.lib;libovravatar.lib;..\Include\glew\lib\glew32s.lib;LibOVRPlatform64_1.lib;..\Include\SDL2\lib\x64\SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -109,7 +112,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>LibOVR.lib;opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;LibOVR.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -122,25 +125,45 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)\Include\LibOVR;$(MSBuildThisFileDirectory)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <OpenMPSupport>true</OpenMPSupport>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>LibOVR.lib;opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;LibOVR.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\OVR_PlatformLoader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Avatar.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ReferenceShaders\AvatarFragmentShader.glsl" />
+    <None Include="..\ReferenceShaders\AvatarFragmentShaderPBS.glsl" />
+    <None Include="..\ReferenceShaders\AvatarVertexShader.glsl" />
+    <None Include="ClassDiagram.cd" />
     <None Include="packages.config" />
+    <None Include="shader.frag" />
+    <None Include="shader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Avatar.h" />
+    <ClInclude Include="mesh.h" />
+    <ClInclude Include="model.h" />
+    <ClInclude Include="shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\nupengl.core.redist.0.1.0.1\build\native\nupengl.core.redist.targets" Condition="Exists('..\packages\nupengl.core.redist.0.1.0.1\build\native\nupengl.core.redist.targets')" />
     <Import Project="..\packages\nupengl.core.0.1.0.1\build\native\nupengl.core.targets" Condition="Exists('..\packages\nupengl.core.0.1.0.1\build\native\nupengl.core.targets')" />
     <Import Project="..\packages\oglplus.0.67.0\build\native\oglplus.targets" Condition="Exists('..\packages\oglplus.0.67.0\build\native\oglplus.targets')" />
+    <Import Project="..\packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets" Condition="Exists('..\packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" />
+    <Import Project="..\packages\Assimp.3.0.0\build\native\Assimp.targets" Condition="Exists('..\packages\Assimp.3.0.0\build\native\Assimp.targets')" />
+    <Import Project="..\packages\sdl2.redist.2.0.5\build\native\sdl2.redist.targets" Condition="Exists('..\packages\sdl2.redist.2.0.5\build\native\sdl2.redist.targets')" />
+    <Import Project="..\packages\sdl2.2.0.5\build\native\sdl2.targets" Condition="Exists('..\packages\sdl2.2.0.5\build\native\sdl2.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -149,6 +172,10 @@
     <Error Condition="!Exists('..\packages\nupengl.core.redist.0.1.0.1\build\native\nupengl.core.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\nupengl.core.redist.0.1.0.1\build\native\nupengl.core.redist.targets'))" />
     <Error Condition="!Exists('..\packages\nupengl.core.0.1.0.1\build\native\nupengl.core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\nupengl.core.0.1.0.1\build\native\nupengl.core.targets'))" />
     <Error Condition="!Exists('..\packages\oglplus.0.67.0\build\native\oglplus.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\oglplus.0.67.0\build\native\oglplus.targets'))" />
+    <Error Condition="!Exists('..\packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Assimp.redist.3.0.0\build\native\Assimp.redist.targets'))" />
+    <Error Condition="!Exists('..\packages\Assimp.3.0.0\build\native\Assimp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Assimp.3.0.0\build\native\Assimp.targets'))" />
     <Error Condition="!Exists('..\packages\GLMathematics.0.9.5.4\build\native\GLMathematics.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GLMathematics.0.9.5.4\build\native\GLMathematics.props'))" />
+    <Error Condition="!Exists('..\packages\sdl2.redist.2.0.5\build\native\sdl2.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\sdl2.redist.2.0.5\build\native\sdl2.redist.targets'))" />
+    <Error Condition="!Exists('..\packages\sdl2.2.0.5\build\native\sdl2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\sdl2.2.0.5\build\native\sdl2.targets'))" />
   </Target>
 </Project>

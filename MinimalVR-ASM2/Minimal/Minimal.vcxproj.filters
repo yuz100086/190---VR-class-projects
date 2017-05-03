@@ -18,8 +18,38 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\OVR_PlatformLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Avatar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="ClassDiagram.cd" />
+    <None Include="..\ReferenceShaders\AvatarFragmentShader.glsl" />
+    <None Include="..\ReferenceShaders\AvatarFragmentShaderPBS.glsl" />
+    <None Include="..\ReferenceShaders\AvatarVertexShader.glsl" />
+    <None Include="shader.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shader.vert">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Avatar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
