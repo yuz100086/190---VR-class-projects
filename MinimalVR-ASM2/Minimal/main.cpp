@@ -625,6 +625,7 @@ static const char * VERTEX_SHADER = R"SHADER(
 
 uniform mat4 ProjectionMatrix = mat4(1);
 uniform mat4 CameraMatrix = mat4(1);
+uniform mat4 model;
 
 layout(location = 0) in vec4 Position;
 layout(location = 2) in vec3 Normal;
@@ -633,7 +634,7 @@ layout(location = 5) in mat4 InstanceTransform;
 out vec3 vertNormal;
 
 void main(void) {
-   mat4 ViewXfm = CameraMatrix * InstanceTransform;
+   mat4 ViewXfm = CameraMatrix * InstanceTransform * model;
    //mat4 ViewXfm = CameraMatrix;
    vertNormal = Normal;
    gl_Position = ProjectionMatrix * ViewXfm * Position;
@@ -641,18 +642,18 @@ void main(void) {
 )SHADER";
 
 static const char * FRAGMENT_SHADER = R"SHADER(
-#version 410 core
-
-in vec3 vertNormal;
-out vec4 fragColor;
-
-void main(void) {
-    vec3 color = vertNormal;
-    if (!all(equal(color, abs(color)))) {
-        color = vec3(1.0) - abs(color);
-    }
-    fragColor = vec4(color, 1.0);
-}
+//#version 410 core
+//
+//in vec3 vertNormal;
+//out vec4 fragColor;
+//
+//void main(void) {
+//    vec3 color = vertNormal;
+//    if (!all(equal(color, abs(color)))) {
+//        color = vec3(1.0) - abs(color);
+//    }
+//    fragColor = vec4(color, 1.0);
+//}
 )SHADER";
 
 // a class for encapsulating building and rendering an RGB cube
@@ -667,7 +668,7 @@ struct ColorCubeScene {
 
 	// VBOs for the cube's vertices and normals
 
-	const unsigned int GRID_SIZE{ 5 };
+	const unsigned int GRID_SIZE{ 1 };
 
 public:
 	ColorCubeScene() : cube({ "Position", "Normal" }, oglplus::shapes::Cube()) {
@@ -701,13 +702,11 @@ public:
 			for (unsigned int z = 0; z < GRID_SIZE; ++z) {
 				for (unsigned int y = 0; y < GRID_SIZE; ++y) {
 					for (unsigned int x = 0; x < GRID_SIZE; ++x) {
-						int xpos = (x - (GRID_SIZE / 2)) * 2;
-						int ypos = (y - (GRID_SIZE / 2)) * 2;
-						int zpos = (z - (GRID_SIZE / 2)) * 2;
+						int xpos = 0;
+						int ypos = 0;
+						int zpos = -3;
 						vec3 relativePosition = vec3(xpos, ypos, zpos);
-						if (relativePosition == vec3(0)) {
-							continue;
-						}
+						
 						instance_positions.push_back(glm::translate(glm::mat4(1.0f), relativePosition));
 					}
 				}
@@ -731,6 +730,8 @@ public:
 		prog.Use();
 		Uniform<mat4>(prog, "ProjectionMatrix").Set(projection);
 		Uniform<mat4>(prog, "CameraMatrix").Set(modelview);
+		mat4 model = glm::scale(mat4(1), glm::vec3(1.5f, 1.5f, 1.5f));
+		Uniform<mat4>(prog, "model").Set(model);
 		vao.Bind();
 		cube.Draw(instanceCount);
 	}
