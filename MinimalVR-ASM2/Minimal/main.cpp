@@ -737,6 +737,28 @@ struct ColorCubeScene {
 
 	const unsigned int GRID_SIZE{ 1 };
 
+	const GLfloat vertices[6][3] = {
+		// "Front" vertices
+		{ -10.0, -10.0, 10.0 },{ 10.0, -10.0, 10.0 },{ 10.0, 10.0, 10.0 },{ -10.0, 10.0, 10.0 },
+		// "Back" vertices
+		
+	}
+
+	const GLuint indices[6][6] = {
+		// Front face
+		{ 0, 1, 2, 2, 3, 0 },
+		
+	}
+
+	const GLfloat uvs[48] = {
+		// Front face
+		0.0f, 1.0f, // 0
+		1.0f, 1.0f, // 1
+		1.0f, 0.0f, // 2
+		0.0f, 0.0f, // 3
+		
+	}
+
 public:
 	ColorCubeScene() : cube({ "Position", "Normal" }, oglplus::shapes::Cube()) {
 		using namespace oglplus;
